@@ -1,0 +1,54 @@
+- name: Create Azure VM
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+      resource_group: CFS-resources
+      allocation_method: Static
+      name: CFS-ip2
+    register: output_ip_address
+  - name: Dump public IP for VM which will be created
+    debug:
+      msg: "The public IP is {{ output_ip_address.state.ip_address }}."
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: CFS-resources
+      name: subnet3
+      address_prefix: "10.254.2.0/24"
+      virtual_network: CFS-network
+  - name: Create Network Security Group that allows SSH
+    azure_rm_securitygroup:
+      resource_group: CFS-resources
+      name: myNetworkSecurityGroup
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+  - name: Create virtual network interface card
+    azure_rm_networkinterface:
+      resource_group: CFS-resources
+      name: CFS-nic2
+      virtual_network: CFS-network
+      subnet: subnet3
+      public_ip_name: CFS-ip2
+      security_group: myNetworkSecurityGroup
+  - name: Create VM
+    azure_rm_virtualmachine:
+      resource_group: CFS-resources
+      name: dockerVM
+      vm_size: Standard_DS1_v2
+      admin_username: vmadmin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/azureuser/.ssh/authorized_keys
+          key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpIBHdwI8h1ixbVidbN0/50TdTpHAvTh7WIs/SjakALQ27BQD0mgHQMfpncAboMGLv2jJbXZoj3cTvBYwnfbCTmqmpjXdThYiiNM4NoZ1qC99lKSNeBG6IuyprF42BiPnW6UKRox6GZ4ccF8/3PHNyvN0QTch2ENKmt4UYTGWo8LG0a41rTB3Ya6IMU2x8ROSEFSnJbTPQo9jExdtlV2QILMntrLUJIfwd0J6HO1m2oTh4qrSRvNZMCYLyEaZx3pVWy5dj9pexypptHDj7ACobFwaga9q1I4T5M6xP5LIhGjWtAFmqYI6xHNwoafrLwk6X8t1SdPH3fgjc3j1AIyXz root@CFS-vm-2
+      network_interfaces: CFS-nic2
+      image:
+        offer: UbuntuServer
+        publisher: Canonical
+        sku: '16.04-LTS'
+        version: latest

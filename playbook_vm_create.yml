@@ -1,0 +1,64 @@
+---
+- name: Create Azure VM
+  hosts: localhost
+  connection: local
+  vars:
+    resource_group: "CFS_Resources1"
+    vm_name: dockerVM
+    location: eastus
+  tasks:
+  - name: Create a resource group
+    azure_rm_resourcegroup:
+      name: "{{ resource_group }}"
+      location: "{{ location }}"
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      address_prefixes: "10.254.0.0/16"
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      address_prefix: "10.254.2.0/24"
+      virtual_network: "{{ vm_name }}"
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+      resource_group: "{{ resource_group }}"
+      allocation_method: Static
+      name: "{{ vm_name }}"
+  - name: Create Network Security Group that allows SSH
+    azure_rm_securitygroup:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+  - name: Create virtual network inteface card
+    azure_rm_networkinterface:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      virtual_network: "{{ vm_name }}"
+      subnet: "{{ vm_name }}"
+      public_ip_name: "{{ vm_name }}"
+      security_group: "{{ vm_name }}"
+  - name: Create VM
+    azure_rm_virtualmachine:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      vm_size: Standard_DS1_v2
+      admin_username: vmadmin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/azureuser/.ssh/authorized_keys
+          key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpIBHdwI8h1ixbVidbN0/50TdTpHAvTh7WIs/SjakALQ27BQD0mgHQMfpncAboMGLv2jJbXZoj3cTvBYwnfbCTmqmpjXdThYiiNM4NoZ1qC99lKSNeBG6IuyprF42BiPnW6UKRox6GZ4ccF8/3PHNyvN0QTch2ENKmt4UYTGWo8LG0a41rTB3Ya6IMU2x8ROSEFSnJbTPQo9jExdtlV2QILMntrLUJIfwd0J6HO1m2oTh4qrSRvNZMCYLyEaZx3pVWy5dj9pexypptHDj7ACobFwaga9q1I4T5M6xP5LIhGjWtAFmqYI6xHNwoafrLwk6X8t1SdPH3fgjc3j1AIyXz root@CFS-vm-2
+      network_interfaces: "{{ vm_name }}"
+      image:
+        offer: UbuntuServer
+        publisher: Canonical
+        sku: 16.04-LTS
+        version: latest
