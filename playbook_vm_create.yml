@@ -1,11 +1,10 @@
----
 - name: Create Azure VM
   hosts: localhost
   connection: local
   vars:
-    resource_group: "CFS_Resources1"
+    resource_group: "CFS_Resource1"
     vm_name: dockerVM
-    location: eastus
+    location: East Us
   tasks:
   - name: Create a resource group
     azure_rm_resourcegroup:
@@ -52,13 +51,10 @@
       name: "{{ vm_name }}"
       vm_size: Standard_DS1_v2
       admin_username: vmadmin
-      ssh_password_enabled: false
-      ssh_public_keys:
-        - path: /home/azureuser/.ssh/authorized_keys
-          key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpIBHdwI8h1ixbVidbN0/50TdTpHAvTh7WIs/SjakALQ27BQD0mgHQMfpncAboMGLv2jJbXZoj3cTvBYwnfbCTmqmpjXdThYiiNM4NoZ1qC99lKSNeBG6IuyprF42BiPnW6UKRox6GZ4ccF8/3PHNyvN0QTch2ENKmt4UYTGWo8LG0a41rTB3Ya6IMU2x8ROSEFSnJbTPQo9jExdtlV2QILMntrLUJIfwd0J6HO1m2oTh4qrSRvNZMCYLyEaZx3pVWy5dj9pexypptHDj7ACobFwaga9q1I4T5M6xP5LIhGjWtAFmqYI6xHNwoafrLwk6X8t1SdPH3fgjc3j1AIyXz root@CFS-vm-2
+      admin_password: P@ssword123456
       network_interfaces: "{{ vm_name }}"
       image:
         offer: UbuntuServer
         publisher: Canonical
-        sku: 16.04-LTS
+        sku: 18.04-LTS
         version: latest
