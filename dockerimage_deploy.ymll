@@ -1,0 +1,19 @@
+- hosts: linux
+  become: true
+  tasks:
+  - name: docker_login
+    docker_login:
+      username: yuvraj3010
+      password: P@ssword3010
+  - name: pull
+    docker_image:
+      name: yuvraj3010/cfsproject
+  - name: Container create
+    docker_container:
+      name: web
+      image: yuvraj3010/cfsproject
+      state: started
+      ports:
+            "80:8080"
+      tty: true
+      detach: true
